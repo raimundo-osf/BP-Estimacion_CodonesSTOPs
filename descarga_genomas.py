@@ -30,17 +30,15 @@ def descargar_genoma_fasta(genome_id):
     # Descargar y descomprimir el archivo FASTA
     import urllib.request
     import gzip
-    import shutil
     
     fasta_file = "temp.fna.gz"
     urllib.request.urlretrieve(fasta_url, fasta_file)
     
-    # Descomprimir el archivo
-    with gzip.open(fasta_file, 'rb') as f_in:
-        with open(f"genoma_{genome_id}.fasta", 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    # Descomprimir el archivo y devolver el contenido
+    with gzip.open(fasta_file, 'rt') as f_in:
+        fasta_data = f_in.read()
     
-    return f"genoma_{genome_id}.fasta"
+    return fasta_data
 
 # Obtener 1000 IDs de genomas de bacterias
 genome_ids = obtener_ids_genomas()
@@ -48,13 +46,16 @@ genome_ids = obtener_ids_genomas()
 # Seleccionar 100 IDs al azar
 genome_ids_aleatorios = random.sample(genome_ids, 100)
 
-# Descargar y guardar los genomas en formato FASTA
-for i, genome_id in enumerate(genome_ids_aleatorios):
-    try:
-        fasta_file = descargar_genoma_fasta(genome_id)
-        print(f"Descargado y guardado: {fasta_file}")
-    except Exception as e:
-        print(f"Error al descargar el genoma ID {genome_id}: {e}")
-    time.sleep(1)  # Para evitar problemas de tasa de solicitud
+# Abrir el archivo multifasta
+with open("multifasta_genomas.fasta", "w") as multifasta_file:
+    # Descargar y escribir las secuencias en el archivo multifasta
+    for i, genome_id in enumerate(genome_ids_aleatorios):
+        try:
+            fasta_data = descargar_genoma_fasta(genome_id)
+            multifasta_file.write(fasta_data)
+            print(f"Descargado y agregado al archivo multifasta: genoma ID {genome_id}")
+        except Exception as e:
+            print(f"Error al descargar el genoma ID {genome_id}: {e}")
+        time.sleep(1)  # Para evitar problemas de tasa de solicitud
 
-print("Descarga completa de 100 genomas en formato FASTA.")
+print("Descarga completa de 100 genomas en formato multifasta.")
