@@ -14,6 +14,10 @@ Thumbs.db
 # Ignore IDE specific files
 .vscode/
 
+# Ignore specific files
+.~lock.resultados_stop_codons.xlsx#
+temp.fna.gz
+
 # Ignore other temporary files
 *.log
 *.tmp
