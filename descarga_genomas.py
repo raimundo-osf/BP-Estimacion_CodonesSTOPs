@@ -1,9 +1,11 @@
 import random
 import time
 from Bio import Entrez
+import urllib.request
+import gzip
 
-# Configura tu correo electrónico
-Entrez.email = "tu_correo@ejemplo.com"
+# Correo electrónico
+Entrez.email = "raioliva21@gmail.com"
 
 # Función para obtener IDs de genomas
 def obtener_ids_genomas():
@@ -27,11 +29,7 @@ def descargar_genoma_fasta(genome_id):
     # Obtener el archivo FASTA del genoma
     fasta_url = ftp_path + "/" + ftp_path.split('/')[-1] + "_genomic.fna.gz"
     
-    # Descargar y descomprimir el archivo FASTA
-    import urllib.request
-    import gzip
-    
-    fasta_file = "temp.fna.gz"
+    fasta_file = "temp.fna.gz" # Descarga archivo FASTA
     urllib.request.urlretrieve(fasta_url, fasta_file)
     
     # Descomprimir el archivo y devolver el contenido
