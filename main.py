@@ -1,36 +1,65 @@
 import time
 import pandas as pd
-from estimaciones_STOPs import contar_codones_stop, frecuencia_nts, frecuencia_dupletes, frecuencia_tripletes, estimacion_1, estimacion_2, estimacion_3, estimacion_4, estimacion_5, estimacion_6
+from estimaciones_STOPs import (
+    contar_codones_stop, 
+    frecuencia_nts, 
+    frecuencia_dupletes, 
+    frecuencia_tripletes, 
+    estimacion_1, 
+    estimacion_2, 
+    estimacion_3, 
+    estimacion_4, 
+    estimacion_5, 
+    estimacion_6
+)
 
 def cargar_multifasta(archivo_fasta):
     secuencias = {}
+    contador_especies = {}
     with open(archivo_fasta, 'r') as f:
         nombre_especie = ""
         secuencia = ""
         for line in f:
             if line.startswith('>'):
                 if secuencia:
-                    secuencias[nombre_especie] = secuencia
+                    # Si el nombre de la especie ya existe, agregar un sufijo numérico
+                    if nombre_especie in secuencias:
+                        if nombre_especie not in contador_especies:
+                            contador_especies[nombre_especie] = 1
+                        contador_especies[nombre_especie] += 1
+                        nombre_especie_con_sufijo = f"{nombre_especie}_{contador_especies[nombre_especie]}"
+                        secuencias[nombre_especie_con_sufijo] = secuencia
+                    else:
+                        secuencias[nombre_especie] = secuencia
                 nombre_especie = " ".join(line.strip().split()[1:3])
                 secuencia = ""
             else:
                 secuencia += line.strip()
         if secuencia:
-            secuencias[nombre_especie] = secuencia
+            if nombre_especie in secuencias:
+                if nombre_especie not in contador_especies:
+                    contador_especies[nombre_especie] = 1
+                contador_especies[nombre_especie] += 1
+                nombre_especie_con_sufijo = f"{nombre_especie}_{contador_especies[nombre_especie]}"
+                secuencias[nombre_especie_con_sufijo] = secuencia
+            else:
+                secuencias[nombre_especie] = secuencia
     return secuencias
 
 def main():
-    archivo_fasta = "/home/raimundoosf/Desktop/MMSB/BounsPoint1/multifasta_genomas.fasta" 
-    secuencias = cargar_multifasta(archivo_fasta)
-    
+    archivo_multifasta = "/home/raimundoosf/Desktop/MMSB/BounsPoint1/multifasta_genomas.fasta" 
+    secuencias = cargar_multifasta(archivo_multifasta)
+    print(len(secuencias))
     resultados = []
-    
+
     for nombre_especie, secuencia in secuencias.items():
         largo_genoma = len(secuencia)
+        print('\n', largo_genoma)
         probabilidad_nts = frecuencia_nts(secuencia)
         probabilidad_dupletes = frecuencia_dupletes(secuencia)
         probabilidad_tripletes = frecuencia_tripletes(secuencia)
         num_stops_real = contar_codones_stop(secuencia)
+        print(num_stops_real)
 
         # Estimación 1 (misma para cada codón)
         t0 = time.time()
@@ -100,16 +129,17 @@ def main():
         
         # Resultados
         for codon in ["TAG", "TGA", "TAA"]:
+            error_relativo1 = abs(num_stops_real[codon] - estimacion1) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
             resultados.append([
                 nombre_especie, probabilidad_nts['G'] + probabilidad_nts['C'], codon, num_stops_real[codon], 
-                estimacion1, abs(num_stops_real[codon] - estimacion1) / num_stops_real[codon], tiempo1, 
+                estimacion1, error_relativo1, tiempo1, 
                 estimaciones2[codon], errores_relativos2[codon], tiempos2[codon],
                 estimaciones3[codon], errores_relativos3[codon], tiempos3[codon],
                 estimaciones4[codon], errores_relativos4[codon], tiempos4[codon],
                 estimaciones5[codon], errores_relativos5[codon], tiempos5[codon],
                 estimaciones6[codon], errores_relativos6[codon], tiempos6[codon]
             ])
-
+            
     # Crear el DataFrame
     columnas = ["Nombre de la especie", "%G+C", "Codón", "Número de STOPs real", 
                 "Estimación 1", "Error relativo 1", "Tiempo de cálculo 1", 

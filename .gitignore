@@ -17,6 +17,7 @@ Thumbs.db
 # Ignore specific files
 .~lock.resultados_stop_codons.xlsx#
 temp.fna.gz
+.multifasta_genomas.fasta.swp
 
 # Ignore other temporary files
 *.log
