@@ -22,7 +22,6 @@ def cargar_multifasta(archivo_fasta):
         for line in f:
             if line.startswith('>'):
                 if secuencia:
-                    # Si el nombre de la especie ya existe, agregar un sufijo numérico
                     if nombre_especie in secuencias:
                         if nombre_especie not in contador_especies:
                             contador_especies[nombre_especie] = 1
@@ -54,9 +53,25 @@ def main():
 
     for nombre_especie, secuencia in secuencias.items():
         largo_genoma = len(secuencia)
+        
+        # Calcular frecuencias de nucleótidos
+        t_nts_start = time.time()
         probabilidad_nts = frecuencia_nts(secuencia)
+        t_nts_end = time.time()
+        t_calculo_frecuencia_nts = t_nts_end - t_nts_start
+
+        # Calcular frecuencias de dupletes
+        t_dupletes_start = time.time()
         probabilidad_dupletes = frecuencia_dupletes(secuencia)
+        t_dupletes_end = time.time()
+        t_calculo_frecuencia_dupletes = t_dupletes_end - t_dupletes_start
+
+        # Calcular frecuencias de tripletes
+        t_tripletes_start = time.time()
         probabilidad_tripletes = frecuencia_tripletes(secuencia)
+        t_tripletes_end = time.time()
+        t_calculo_frecuencia_tripletes = t_tripletes_end - t_tripletes_start
+
         num_stops_real = contar_codones_stop(secuencia)
 
         # Estimación 1 (misma para cada codón)
@@ -74,7 +89,7 @@ def main():
             estimacion2 = estimacion_2(largo_genoma, codon, probabilidad_nts)
             t3 = time.time()
             estimaciones2[codon] = estimacion2
-            tiempos2[codon] = t3 - t2
+            tiempos2[codon] = t3 - t2 + t_calculo_frecuencia_nts
             errores_relativos2[codon] = abs(num_stops_real[codon] - estimacion2) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 3 para cada codón STOP
@@ -86,7 +101,7 @@ def main():
             estimacion3 = estimacion_3(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes)
             t5 = time.time()
             estimaciones3[codon] = estimacion3
-            tiempos3[codon] = t5 - t4
+            tiempos3[codon] = t5 - t4 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes
             errores_relativos3[codon] = abs(num_stops_real[codon] - estimacion3) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 4 para cada codón STOP
@@ -98,7 +113,7 @@ def main():
             estimacion4 = estimacion_4(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes)
             t7 = time.time()
             estimaciones4[codon] = estimacion4
-            tiempos4[codon] = t7 - t6
+            tiempos4[codon] = t7 - t6 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes
             errores_relativos4[codon] = abs(num_stops_real[codon] - estimacion4) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
         
         # Estimación 5 para cada codón STOP
@@ -110,7 +125,7 @@ def main():
             estimacion5 = estimacion_5(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes, probabilidad_tripletes)
             t9 = time.time()
             estimaciones5[codon] = estimacion5
-            tiempos5[codon] = t9 - t8
+            tiempos5[codon] = t9 - t8 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes + t_calculo_frecuencia_tripletes
             errores_relativos5[codon] = abs(num_stops_real[codon] - estimacion5) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 6 para cada codón STOP
@@ -122,7 +137,7 @@ def main():
             estimacion6 = estimacion_6(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes, probabilidad_tripletes)
             t11 = time.time()
             estimaciones6[codon] = estimacion6
-            tiempos6[codon] = t11 - t10
+            tiempos6[codon] = t11 - t10 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes + t_calculo_frecuencia_tripletes
             errores_relativos6[codon] = abs(num_stops_real[codon] - estimacion6) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
         
         # Resultados
