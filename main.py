@@ -54,12 +54,10 @@ def main():
 
     for nombre_especie, secuencia in secuencias.items():
         largo_genoma = len(secuencia)
-        print('\n', largo_genoma)
         probabilidad_nts = frecuencia_nts(secuencia)
         probabilidad_dupletes = frecuencia_dupletes(secuencia)
         probabilidad_tripletes = frecuencia_tripletes(secuencia)
         num_stops_real = contar_codones_stop(secuencia)
-        print(num_stops_real)
 
         # Estimación 1 (misma para cada codón)
         t0 = time.time()
