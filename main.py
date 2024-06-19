@@ -2,9 +2,9 @@ import time
 import pandas as pd
 from estimaciones_STOPs import (
     contar_codones_stop, 
-    frecuencia_nts, 
-    frecuencia_dupletes, 
-    frecuencia_tripletes, 
+    conteo_nts, 
+    conteo_dupletes, 
+    conteo_tripletes, 
     estimacion_1, 
     estimacion_2, 
     estimacion_3, 
@@ -54,29 +54,29 @@ def main():
     for nombre_especie, secuencia in secuencias.items():
         largo_genoma = len(secuencia)
         
-        # Calcular frecuencias de nucleótidos
+        # Calcular cantidad de cada nucleótido
         t_nts_start = time.time()
-        probabilidad_nts = frecuencia_nts(secuencia)
+        cantidad_nts = conteo_nts(secuencia)
         t_nts_end = time.time()
-        t_calculo_frecuencia_nts = t_nts_end - t_nts_start
+        t_calculo_conteo_nts = t_nts_end - t_nts_start
 
-        # Calcular frecuencias de dupletes
+        # Calcular cantidad de cada duplete
         t_dupletes_start = time.time()
-        probabilidad_dupletes = frecuencia_dupletes(secuencia)
+        cantidad_dupletes = conteo_dupletes(secuencia)
         t_dupletes_end = time.time()
-        t_calculo_frecuencia_dupletes = t_dupletes_end - t_dupletes_start
+        t_calculo_conteo_dupletes = t_dupletes_end - t_dupletes_start
 
-        # Calcular frecuencias de tripletes
+        # Calcular cantidad de cada triplete
         t_tripletes_start = time.time()
-        probabilidad_tripletes = frecuencia_tripletes(secuencia)
+        cantidad_tripletes = conteo_tripletes(secuencia)
         t_tripletes_end = time.time()
-        t_calculo_frecuencia_tripletes = t_tripletes_end - t_tripletes_start
+        t_calculo_conteo_tripletes = t_tripletes_end - t_tripletes_start
 
         num_stops_real = contar_codones_stop(secuencia)
 
         # Estimación 1 (misma para cada codón)
         t0 = time.time()
-        estimacion1 = estimacion_1(largo_genoma, 3)
+        estimacion1 = estimacion_1(largo_genoma)
         t1 = time.time()
         tiempo1 = t1 - t0
         
@@ -86,10 +86,10 @@ def main():
         errores_relativos2 = {}
         for codon in ["TAG", "TGA", "TAA"]:
             t2 = time.time()
-            estimacion2 = estimacion_2(largo_genoma, codon, probabilidad_nts)
+            estimacion2 = estimacion_2(largo_genoma, codon, cantidad_nts)
             t3 = time.time()
             estimaciones2[codon] = estimacion2
-            tiempos2[codon] = t3 - t2 + t_calculo_frecuencia_nts
+            tiempos2[codon] = t3 - t2 + t_calculo_conteo_nts
             errores_relativos2[codon] = abs(num_stops_real[codon] - estimacion2) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 3 para cada codón STOP
@@ -98,10 +98,10 @@ def main():
         errores_relativos3 = {}
         for codon in ["TAG", "TGA", "TAA"]:
             t4 = time.time()
-            estimacion3 = estimacion_3(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes)
+            estimacion3 = estimacion_3(largo_genoma, codon, cantidad_nts, cantidad_dupletes)
             t5 = time.time()
             estimaciones3[codon] = estimacion3
-            tiempos3[codon] = t5 - t4 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes
+            tiempos3[codon] = t5 - t4 + t_calculo_conteo_nts + t_calculo_conteo_dupletes
             errores_relativos3[codon] = abs(num_stops_real[codon] - estimacion3) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 4 para cada codón STOP
@@ -110,11 +110,13 @@ def main():
         errores_relativos4 = {}
         for codon in ["TAG", "TGA", "TAA"]:
             t6 = time.time()
-            estimacion4 = estimacion_4(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes)
+            # Estimación se da sobre codon inverso -lectura desde ultimo nt hacia 1er nt-
+            estimacion4 = estimacion_4(largo_genoma, codon, cantidad_nts, cantidad_dupletes)
             t7 = time.time()
             estimaciones4[codon] = estimacion4
-            tiempos4[codon] = t7 - t6 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes
-            errores_relativos4[codon] = abs(num_stops_real[codon] - estimacion4) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
+            tiempos4[codon] = t7 - t6 + t_calculo_conteo_nts + t_calculo_conteo_dupletes
+            codon_inverso = codon[::-1]
+            errores_relativos4[codon] = abs(num_stops_real[codon_inverso] - estimacion4) / num_stops_real[codon_inverso] if num_stops_real[codon_inverso] != 0 else float('inf')
         
         # Estimación 5 para cada codón STOP
         estimaciones5 = {}
@@ -122,10 +124,10 @@ def main():
         errores_relativos5 = {}
         for codon in ["TAG", "TGA", "TAA"]:
             t8 = time.time()
-            estimacion5 = estimacion_5(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes, probabilidad_tripletes)
+            estimacion5 = estimacion_5(largo_genoma, codon, cantidad_nts, cantidad_dupletes, cantidad_tripletes)
             t9 = time.time()
             estimaciones5[codon] = estimacion5
-            tiempos5[codon] = t9 - t8 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes + t_calculo_frecuencia_tripletes
+            tiempos5[codon] = t9 - t8 + t_calculo_conteo_nts + t_calculo_conteo_dupletes + t_calculo_conteo_tripletes
             errores_relativos5[codon] = abs(num_stops_real[codon] - estimacion5) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
 
         # Estimación 6 para cada codón STOP
@@ -134,17 +136,20 @@ def main():
         errores_relativos6 = {}
         for codon in ["TAG", "TGA", "TAA"]:
             t10 = time.time()
-            estimacion6 = estimacion_6(largo_genoma, codon, probabilidad_nts, probabilidad_dupletes, probabilidad_tripletes)
+            # Estimación se da sobre codon inverso -lectura desde ultimo nt hacia 1er nt-
+            estimacion6 = estimacion_6(largo_genoma, codon, cantidad_nts, cantidad_dupletes, cantidad_tripletes)
             t11 = time.time()
             estimaciones6[codon] = estimacion6
-            tiempos6[codon] = t11 - t10 + t_calculo_frecuencia_nts + t_calculo_frecuencia_dupletes + t_calculo_frecuencia_tripletes
-            errores_relativos6[codon] = abs(num_stops_real[codon] - estimacion6) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
+            tiempos6[codon] = t11 - t10 + t_calculo_conteo_nts + t_calculo_conteo_dupletes + t_calculo_conteo_tripletes
+            codon_inverso = codon[::-1]
+            errores_relativos6[codon] = abs(num_stops_real[codon_inverso] - estimacion6) / num_stops_real[codon_inverso] if num_stops_real[codon_inverso] != 0 else float('inf')
         
         # Resultados
         for codon in ["TAG", "TGA", "TAA"]:
             error_relativo1 = abs(num_stops_real[codon] - estimacion1) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
+            porcentaje_GC = (cantidad_nts['G'] + cantidad_nts['C']) / largo_genoma
             resultados.append([
-                nombre_especie, probabilidad_nts['G'] + probabilidad_nts['C'], codon, num_stops_real[codon], 
+                nombre_especie, porcentaje_GC, codon, num_stops_real[codon], 
                 estimacion1, error_relativo1, tiempo1, 
                 estimaciones2[codon], errores_relativos2[codon], tiempos2[codon],
                 estimaciones3[codon], errores_relativos3[codon], tiempos3[codon],
