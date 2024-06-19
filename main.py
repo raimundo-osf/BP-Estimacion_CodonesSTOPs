@@ -146,10 +146,11 @@ def main():
         
         # Resultados
         for codon in ["TAG", "TGA", "TAA"]:
+            codon_inverso = codon[::-1]
             error_relativo1 = abs(num_stops_real[codon] - estimacion1) / num_stops_real[codon] if num_stops_real[codon] != 0 else float('inf')
             porcentaje_GC = (cantidad_nts['G'] + cantidad_nts['C']) / largo_genoma
             resultados.append([
-                nombre_especie, porcentaje_GC, codon, num_stops_real[codon], 
+                nombre_especie, porcentaje_GC, codon, num_stops_real[codon], codon_inverso, num_stops_real[codon_inverso],
                 estimacion1, error_relativo1, tiempo1, 
                 estimaciones2[codon], errores_relativos2[codon], tiempos2[codon],
                 estimaciones3[codon], errores_relativos3[codon], tiempos3[codon],
@@ -159,7 +160,7 @@ def main():
             ])
             
     # Crear el DataFrame
-    columnas = ["Nombre de la especie", "%G+C", "Codón", "Número de STOPs real", 
+    columnas = ["Nombre de la especie", "%G+C", "Codón", "Número de STOPs real", "Codón Inverso", "Número de STOPs real",
                 "Estimación 1", "Error relativo 1", "Tiempo de cálculo 1", 
                 "Estimación 2", "Error relativo 2", "Tiempo de cálculo 2",
                 "Estimación 3", "Error relativo 3", "Tiempo de cálculo 3",
@@ -169,12 +170,12 @@ def main():
     df = pd.DataFrame(resultados, columns=columnas)
 
     # Calcular promedios y desviaciones estándar
-    promedios = df.iloc[:, 4:].mean()
-    desviaciones = df.iloc[:, 4:].std()
+    promedios = df.iloc[:, 6:].mean()
+    desviaciones = df.iloc[:, 6:].std()
 
     # Agregar promedios y desviaciones al DataFrame
-    promedios_row = ["Promedios", "", "", ""] + list(promedios)
-    desviaciones_row = ["Desviaciones estándar", "", "", ""] + list(desviaciones)
+    promedios_row = ["Promedios", "", "", "", "", ""] + list(promedios)
+    desviaciones_row = ["Desviaciones estándar", "", "", "", "", ""] + list(desviaciones)
     df.loc[len(df)] = promedios_row
     df.loc[len(df)] = desviaciones_row
 
